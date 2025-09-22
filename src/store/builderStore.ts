@@ -40,9 +40,12 @@ export const useBuilderStore = create<BuilderState>((set, get) => ({
   },
 
   addElement: (element) => {
-    set((state) => ({
-      elements: [...state.elements, element]
-    }));
+    console.log('Store: Adding element', element);
+    set((state) => {
+      const newElements = [...state.elements, element];
+      console.log('Store: New elements array', newElements);
+      return { elements: newElements };
+    });
   },
 
   removeElement: (id) => {
@@ -64,6 +67,7 @@ export const useBuilderStore = create<BuilderState>((set, get) => ({
   },
 
   selectElement: (element) => {
+    console.log('Store: Selecting element', element);
     set({ selectedElement: element });
   },
 
@@ -97,6 +101,7 @@ export const useBuilderStore = create<BuilderState>((set, get) => ({
       const { type, props, children } = element;
       
       const propsString = Object.entries(props)
+        .filter(([key]) => key !== 'children')
         .map(([key, value]) => {
           if (typeof value === 'string') {
             return `${key}="${value}"`;
@@ -107,9 +112,9 @@ export const useBuilderStore = create<BuilderState>((set, get) => ({
 
       const childrenCode = children?.map(generateComponentCode).join('\n    ') || '';
       
-      if (childrenCode) {
+      if (childrenCode || props.children) {
         return `<${type} ${propsString}>
-    ${childrenCode}
+    ${childrenCode || props.children}
 </${type}>`;
       }
       

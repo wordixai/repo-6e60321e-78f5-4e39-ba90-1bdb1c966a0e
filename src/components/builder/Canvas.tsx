@@ -10,21 +10,25 @@ export const Canvas = () => {
   const [{ isOver }, drop] = useDrop(() => ({
     accept: 'component',
     drop: (item: any, monitor) => {
+      console.log('Dropping item:', item);
       if (!monitor.didDrop()) {
         const offset = monitor.getClientOffset();
         const canvasRect = canvasRef.current?.getBoundingClientRect();
         
         if (offset && canvasRect) {
-          const x = (offset.x - canvasRect.left) / canvas.zoom - canvas.position.x;
-          const y = (offset.y - canvasRect.top) / canvas.zoom - canvas.position.y;
+          const x = offset.x - canvasRect.left;
+          const y = offset.y - canvasRect.top;
+          
+          console.log('Drop position:', { x, y });
           
           const newElement: Element = {
             id: `${item.type}-${Date.now()}`,
             type: item.type,
-            props: item.props,
+            props: { ...item.props },
             position: { x: Math.max(0, x), y: Math.max(0, y) }
           };
           
+          console.log('Adding element:', newElement);
           addElement(newElement);
         }
       }
@@ -40,21 +44,18 @@ export const Canvas = () => {
     }
   };
 
+  console.log('Canvas elements:', elements);
+
   return (
-    <div className="flex-1 overflow-auto bg-gray-100">
+    <div className="flex-1 overflow-hidden bg-gray-100">
       <div
         ref={(node) => {
           drop(node);
           canvasRef.current = node;
         }}
-        className={`relative min-h-full min-w-full bg-white ${
-          isOver ? 'bg-blue-50' : ''
-        }`}
+        className="relative w-full h-full bg-white"
         style={{
-          transform: `scale(${canvas.zoom})`,
-          transformOrigin: 'top left',
-          width: '100%',
-          height: '100vh',
+          minHeight: '100vh',
           backgroundImage: `
             linear-gradient(to right, #f3f4f6 1px, transparent 1px),
             linear-gradient(to bottom, #f3f4f6 1px, transparent 1px)
@@ -65,25 +66,33 @@ export const Canvas = () => {
       >
         {/* Drop zone overlay when dragging */}
         {isOver && (
-          <div className="absolute inset-0 bg-blue-50 bg-opacity-50 border-2 border-dashed border-blue-400 flex items-center justify-center z-10">
-            <div className="text-blue-600 font-medium bg-white px-4 py-2 rounded-lg shadow-lg">
+          <div className="absolute inset-0 bg-blue-50 bg-opacity-70 border-2 border-dashed border-blue-400 flex items-center justify-center z-50">
+            <div className="text-blue-600 font-medium bg-white px-6 py-3 rounded-lg shadow-lg border">
               Drop component here
             </div>
           </div>
         )}
 
+        {/* Debug info */}
+        <div className="absolute top-4 left-4 bg-black bg-opacity-75 text-white px-3 py-2 rounded text-sm z-40">
+          Elements: {elements.length}
+        </div>
+
         {/* Render all elements */}
-        {elements.map((element) => (
-          <CanvasElement key={element.id} element={element} />
-        ))}
+        {elements.map((element) => {
+          console.log('Rendering element:', element);
+          return (
+            <CanvasElement key={element.id} element={element} />
+          );
+        })}
 
         {/* Empty state */}
         {elements.length === 0 && !isOver && (
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="text-center text-gray-400">
-              <div className="text-4xl mb-4">🎨</div>
-              <div className="text-xl font-medium mb-2">Start Building</div>
-              <div className="text-sm">Drag components from the sidebar to get started</div>
+              <div className="text-6xl mb-4">🎨</div>
+              <div className="text-2xl font-medium mb-3">Start Building</div>
+              <div className="text-lg">Drag components from the sidebar to get started</div>
             </div>
           </div>
         )}
