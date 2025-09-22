@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Search, Type, Square, Image, Button as ButtonIcon, Layout, Grid3X3 } from 'lucide-react';
+import { Search, Type, Square, Image, MousePointer, Layout, Grid3X3 } from 'lucide-react';
 
 const componentLibrary = [
   {
@@ -77,7 +77,7 @@ const componentLibrary = [
       {
         type: 'button',
         name: 'Button',
-        icon: <ButtonIcon className="w-4 h-4" />,
+        icon: <MousePointer className="w-4 h-4" />,
         defaultProps: {
           className: 'px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600',
           children: 'Click me'
