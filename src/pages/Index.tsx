@@ -17,7 +17,6 @@ const Index = () => {
         
         <div className="flex-1 flex">
           {/* Component Library Sidebar */}
-          <BuilderSidebar />
           
           {/* Main Canvas Area */}
           <div className="flex-1 flex flex-col">
