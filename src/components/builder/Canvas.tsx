@@ -5,7 +5,7 @@ import { CanvasElement } from './CanvasElement';
 
 export const Canvas = () => {
   const canvasRef = useRef<HTMLDivElement>(null);
-  const { elements, addElement, canvas } = useBuilderStore();
+  const { elements, addElement, canvas, selectElement } = useBuilderStore();
 
   const [{ isOver }, drop] = useDrop(() => ({
     accept: 'component',
@@ -15,14 +15,14 @@ export const Canvas = () => {
         const canvasRect = canvasRef.current?.getBoundingClientRect();
         
         if (offset && canvasRect) {
-          const x = (offset.x - canvasRect.left) / canvas.zoom;
-          const y = (offset.y - canvasRect.top) / canvas.zoom;
+          const x = (offset.x - canvasRect.left) / canvas.zoom - canvas.position.x;
+          const y = (offset.y - canvasRect.top) / canvas.zoom - canvas.position.y;
           
           const newElement: Element = {
             id: `${item.type}-${Date.now()}`,
             type: item.type,
             props: item.props,
-            position: { x, y }
+            position: { x: Math.max(0, x), y: Math.max(0, y) }
           };
           
           addElement(newElement);
@@ -34,25 +34,41 @@ export const Canvas = () => {
     })
   }));
 
+  const handleCanvasClick = (e: React.MouseEvent) => {
+    if (e.target === e.currentTarget) {
+      selectElement(null);
+    }
+  };
+
   return (
-    <div className="flex-1 overflow-hidden">
+    <div className="flex-1 overflow-auto bg-gray-100">
       <div
         ref={(node) => {
           drop(node);
           canvasRef.current = node;
         }}
-        className={`w-full h-full canvas-bg relative ${
-          isOver ? 'canvas-grid' : ''
+        className={`relative min-h-full min-w-full bg-white ${
+          isOver ? 'bg-blue-50' : ''
         }`}
         style={{
-          transform: `scale(${canvas.zoom}) translate(${canvas.position.x}px, ${canvas.position.y}px)`,
-          transformOrigin: 'top left'
+          transform: `scale(${canvas.zoom})`,
+          transformOrigin: 'top left',
+          width: '100%',
+          height: '100vh',
+          backgroundImage: `
+            linear-gradient(to right, #f3f4f6 1px, transparent 1px),
+            linear-gradient(to bottom, #f3f4f6 1px, transparent 1px)
+          `,
+          backgroundSize: '20px 20px'
         }}
+        onClick={handleCanvasClick}
       >
         {/* Drop zone overlay when dragging */}
         {isOver && (
-          <div className="absolute inset-0 bg-blue-50 bg-opacity-50 border-2 border-dashed border-blue-400 rounded-lg flex items-center justify-center">
-            <div className="text-blue-600 font-medium">Drop component here</div>
+          <div className="absolute inset-0 bg-blue-50 bg-opacity-50 border-2 border-dashed border-blue-400 flex items-center justify-center z-10">
+            <div className="text-blue-600 font-medium bg-white px-4 py-2 rounded-lg shadow-lg">
+              Drop component here
+            </div>
           </div>
         )}
 
@@ -61,19 +77,16 @@ export const Canvas = () => {
           <CanvasElement key={element.id} element={element} />
         ))}
 
-        {/* Canvas grid background */}
-        <div className="absolute inset-0 pointer-events-none opacity-20">
-          <div
-            className="w-full h-full"
-            style={{
-              backgroundImage: `
-                linear-gradient(to right, #e5e7eb 1px, transparent 1px),
-                linear-gradient(to bottom, #e5e7eb 1px, transparent 1px)
-              `,
-              backgroundSize: '20px 20px'
-            }}
-          />
-        </div>
+        {/* Empty state */}
+        {elements.length === 0 && !isOver && (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="text-center text-gray-400">
+              <div className="text-4xl mb-4">🎨</div>
+              <div className="text-xl font-medium mb-2">Start Building</div>
+              <div className="text-sm">Drag components from the sidebar to get started</div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
